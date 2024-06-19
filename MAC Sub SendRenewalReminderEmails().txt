@@ -1,0 +1,122 @@
+Sub SendRenewalReminderEmails()
+    Dim i As Long
+    Dim RenewalDate As Date
+    Dim RecipientEmail As String
+    Dim FirstNameColumn As Integer
+    Dim LastNameColumn As Integer
+    Dim ws As Worksheet
+
+    FirstNameColumn = 1
+    LastNameColumn = 2
+    RenewalDateColumn = 3
+    EmailColumn = 4
+
+    Set ws = ThisWorkbook.Sheets("TEST")
+
+   ' Find the last row in the worksheet
+    lastRow = ws.Cells(ws.Rows.Count, FirstNameColumn).End(xlUp).Row
+
+    ' Loop through each row in the specified range
+    For i = 1 To lastRow
+     
+        If IsDate(ws.Cells(i, RenewalDateColumn).Value) Then
+            RenewalDate = DateValue(ws.Cells(i, RenewalDateColumn).Value)
+        Else
+            MsgBox "Cell (" & i & ", " & RenewalDateColumn & ") does not contain a valid date format."
+            Exit Sub
+        End If
+
+        RecipientEmail = ws.Cells(i, EmailColumn).Value
+        FirstName = ws.Cells(i, FirstNameColumn).Value
+        LastName = ws.Cells(i, LastNameColumn).Value
+        
+        Dim TodayDate As Date
+        TodayDate = Date
+        
+      Dim Subscription As Date
+      Subscription = DateAdd("yyyy", -1, RenewalDate)
+      
+        Dim ExpiryDate As Date
+        ExpiryDate = DateAdd("yyyy", 1, Subscription)
+
+  
+     If TodayDate = ExpiryDate Then
+     
+            Dim emailBody As String
+            emailBody = "<html><body><p>Dear " & ws.Cells(i, FirstNameColumn).Value & " " & ws.Cells(i, LastNameColumn).Value & ",</p>" & _
+                              "<p>The KSPCA animal shelter is sincerely grateful for having you as part of our community. Your continued membership and support helps us achieve our mission and vision to improve animal welfare in Kenya. We want to remind you that your<strong> Family Membership </strong> subscription expires<strong> today.</strong></p>" & _
+                              "<p>When you renew your subscription, we want to ensure you are aware of the benefits your membership provides:</p>" & _
+                              "<ul>" & _
+                              "<li>Voting rights at the KSPCA Annual General Meeting.</li>" & _
+                              "<li>Microchipping your pets at member-only rates.</li>" & _
+                              "<li>Access to our pet cremation service in the unfortunate event of losing your beloved companion.</li>" & _
+                              "<li>Regular news updates to keep you informed about our activities and initiatives.</li>" & _
+                              "</ul>" & _
+                              "<p>Membership options:</p>" & _
+                              "<li>Individual Membership: 4,000/= per annum</li>" & _
+                              "<li>Family Membership: 6,000/= per annum</li>" & _
+                              "<li>Professional Membership: 6,000/= per annum</li>" & _
+                              "<li>Corporate Membership: 21,000/= per annum</li>" & _
+                              "</ul>" & _
+                              "<p>  Renewal of membership options:</p>" & _
+                              "<ul>" & _
+                              "<li>Pay via Mpesa: Use PayBill number 681727, with your name as the Account Name followed by 'MEMBERSHIP' (e.g. Patrick MEMBERSHIP).</li>" & _
+                              "<li>Sign up through our website. Visit <a href='http://www.kspca-kenya.org'>www.kspca-kenya.org</a>.</li>" & _
+                              "<li>Visit our offices along Lang'ata Road next to Hillcrest School, opposite Marist Lane.</li>" & _
+                              "</ul>" & _
+                              "<p>Together, we can make a real difference in the lives of animals in need. We look forward to our journey together.</p>" & _
+                              "<br>" & _
+                              "<p>Kind Regards, <br> KSPCA Team.</p>" & _
+                              "</body></html>"
+                              
+                            '
+                               Call MacSendEmail(RecipientEmail, "Please Renew your KSPCA Membership.", emailBody)
+            
+            ElseIf ExpiryDate < TodayDate Then
+            
+             Dim emailBodyExpiry As String
+            emailBodyExpiry = "<html><body><p>Dear " & ws.Cells(i, FirstNameColumn).Value & " " & ws.Cells(i, LastNameColumn).Value & ",</p>" & _
+                              "<p>The KSPCA animal shelter is sincerely grateful for having you as part of our community. Your continued membership and support helps us achieve our mission and vision to improve animal welfare in Kenya. We want to remind you that your <strong>  Family Membership </strong> subscription expired on <strong> " & Format(ExpiryDate) & ".</strong></p>" & _
+                              "<p>When you renew your subscription, we want to ensure you are aware of the benefits your membership provides:</p>" & _
+                              "<ul>" & _
+                              "<li>Voting rights at the KSPCA Annual General Meeting.</li>" & _
+                              "<li>Microchipping your pets at member-only rates.</li>" & _
+                              "<li>Access to our pet cremation service in the unfortunate event of losing your beloved companion.</li>" & _
+                              "<li>Regular news updates to keep you informed about our activities and initiatives.</li>" & _
+                              "</ul>" & _
+                              "<p>Membership options:</p>" & _
+                              "<li>Individual Membership: 4,000/= per annum</li>" & _
+                              "<li>Family Membership: 6,000/= per annum</li>" & _
+                              "<li>Professional Membership: 6,000/= per annum</li>" & _
+                              "<li>Corporate Membership: 21,000/= per annum</li>" & _
+                              "</ul>" & _
+                              "<p>  Renewal of membership options:</p>" & _
+                              "<ul>" & _
+                              "<li>Pay via Mpesa: Use PayBill number 681727, with your name as the Account Name followed by 'MEMBERSHIP' (e.g. Patrick MEMBERSHIP).</li>" & _
+                              "<li>Sign up through our website. Visit <a href='http://www.kspca-kenya.org'>www.kspca-kenya.org</a>.</li>" & _
+                              "<li>Visit our offices along Lang'ata Road next to Hillcrest School, opposite Marist Lane.</li>" & _
+                              "</ul>" & _
+                              "<p>Together, we can make a real difference in the lives of animals in need. We look forward to our journey together.</p>" & _
+                              "<br>" & _
+                              "<p>Kind Regards, <br> KSPCA Team.</p>" & _
+                              "</body></html>"
+                              
+                            '
+                               Call MacSendEmail(RecipientEmail, "Please Renew your KSPCA Membership.", emailBodyExpiry)
+            
+        End If
+    Next i
+End Sub
+
+Sub MacSendEmail(recipient As String, subject As String, body As String)
+    Dim script As String
+    script = "tell application ""Microsoft Outlook""" & vbCrLf & _
+             "set newMessage to make new outgoing message with properties {subject:""" & subject & """, content:""" & body & """}" & vbCrLf & _
+             "tell newMessage" & vbCrLf & _
+             "make new recipient at end of to recipients with properties {email address:{address:""" & recipient & """}}" & vbCrLf & _
+             "send" & vbCrLf & _
+             "end tell" & vbCrLf & _
+             "end tell"
+    
+    MacScript (script)
+End Sub
